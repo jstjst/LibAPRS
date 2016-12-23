@@ -462,7 +462,7 @@ ISR(ADC_vect) {
     TIFR1 = _BV(ICF1);
     AFSK_adc_isr(AFSK_modem, ((int16_t)((ADC) >> 2) - 128));
     if (hw_afsk_dac_isr) {
-        DAC_PORT = (AFSK_dac_isr(AFSK_modem) & 0xF0) | _BV(3); 
+        DAC_PORT = (AFSK_dac_isr(AFSK_modem) & DAC_PINS) | _BV(PPT_PIN); 
     } else {
         DAC_PORT = 128;
     }
