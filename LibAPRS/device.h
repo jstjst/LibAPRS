@@ -36,6 +36,10 @@
 #if TARGET_CPU == m2560
     #define DAC_PORT PORTF
     #define DAC_DDR  DDRF
+    // Here you can define DAC Pins.  They do not need to be in order
+    // You could use ex PA0, PA2,PA5, PA7
+    //#define DAC_PINS (_BV(0)| _BV(2) | _BV(5) | _BV(7))
+    //Above equals 10100101 
     #define DAC_PINS (_BV(4)| _BV(5) | _BV(6) | _BV(7))
     #define LED_PORT PORTA
     #define LED_DDR  DDRA
@@ -44,6 +48,7 @@
     #define ADC_PORT PORTF
     #define ADC_DDR  DDRF
     #define ADC_PIN 0
+    //PTT pin must use same DDR/PORT as DAC
     #define PPT_PIN 3
 #endif
 
