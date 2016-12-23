@@ -40,9 +40,9 @@ void AFSK_hw_init(void) {
         ADMUX = 0;
     }
 
-    ADC_DDR  &= ~_BV(0);
-    ADC_PORT &= ~_BV(0);
-    DIDR0 |= _BV(0);
+    ADC_DDR  &= ~_BV(ADC_PIN);
+    ADC_PORT &= ~_BV(ADC_PIN);
+    DIDR0 |= _BV(ADC_PIN);
     ADCSRB =    _BV(ADTS2) |
                 _BV(ADTS1) |
                 _BV(ADTS0);  
