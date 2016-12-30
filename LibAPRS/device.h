@@ -23,6 +23,10 @@
 #if TARGET_CPU == m328p
     #define DAC_PORT PORTD
     #define DAC_DDR  DDRD
+    #define DAC_PINA _BV(4)
+    #define DAC_PINB _BV(5)
+    #define DAC_PINC _BV(6)
+    #define DAC_PIND _BV(7)
     #define DAC_PINS (_BV(4)| _BV(5) | _BV(6) | _BV(7))
     #define LED_PORT PORTB
     #define LED_DDR  DDRB
