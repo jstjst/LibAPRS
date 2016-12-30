@@ -460,9 +460,28 @@ extern void APRS_poll();
 uint8_t poll_timer = 0;
 ISR(ADC_vect) {
     TIFR1 = _BV(ICF1);
-    AFSK_adc_isr(AFSK_modem, ((int16_t)((ADC) >> 2) - 128));
+    AFSK_adc_isr(AFSK_modem, ((int16_t )((ADC) >> 2) - 128));
     if (hw_afsk_dac_isr) {
-        DAC_PORT = (AFSK_dac_isr(AFSK_modem) & DAC_PINS) | _BV(PPT_PIN); 
+	   //Sine wave is designed around bits 7,6,5,4
+	   //Here we move bits around to macth chosen ports in 
+	   //Device.h
+	   uint8_t sinwave = AFSK_dac_isr(AFSK_modem);
+	   uint8_t tempsin = 0;
+	   if (sinwave & 0b10000000){
+		tempsin += DAC_PIND;
+		}
+ 	   if (sinwave & 0b01000000){
+		tempsin += DAC_PINC;
+		}
+	   if (sinwave & 0b00100000){
+		tempsin += DAC_PINB;
+		}
+	   if (sinwave & 0b00010000){
+		tempsin += DAC_PINA;
+		}
+
+	DAC_PORT = tempsin & DAC_PINS | _BV(PPT_PIN);
+
     } else {
         DAC_PORT = 128;
     }
