@@ -35,9 +35,9 @@ void AFSK_hw_init(void) {
     ICR1 = (((CPU_FREQ+FREQUENCY_CORRECTION)) / 9600) - 1;
 
     if (hw_5v_ref) {
-        ADMUX = _BV(REFS0) | 0;
+        ADMUX = _BV(REFS0) | ADC_PIN;
     } else {
-        ADMUX = 0;
+        ADMUX = ADC_PIN;
     }
 
     ADC_DDR  &= ~_BV(ADC_PIN);
