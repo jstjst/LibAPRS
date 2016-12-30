@@ -35,6 +35,8 @@
     #define ADC_PORT PORTC
     #define ADC_DDR  DDRC
     #define ADC_PIN 0
+    #define PTT_PORT PORTD
+    #define PTT_DDR DDRD
     #define PPT_PIN 3
 #endif
 #if TARGET_CPU == m2560
