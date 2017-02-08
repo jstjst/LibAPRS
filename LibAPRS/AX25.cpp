@@ -38,6 +38,7 @@ static void ax25_decode(AX25Ctx *ctx) {
         DECODE_CALL(buf, msg.rpt_list[msg.rpt_count].call);
         msg.rpt_list[msg.rpt_count].ssid = (*buf >> 1) & 0x0F;
         AX25_SET_REPEATED(&msg, msg.rpt_count, (*buf & 0x80));
+        msg.rpt_list[msg.rpt_count].call[6] = 0;
     }
 
     msg.ctrl = *buf++;
