@@ -34,6 +34,6 @@ void APRS_sendLoc(void *_buffer, size_t length);
 void APRS_sendMsg(void *_buffer, size_t length);
 void APRS_msgRetry();
 
-void APRS_printSettings();
+void APRS_printSettings(Stream &serial);
 
 int freeMemory();
