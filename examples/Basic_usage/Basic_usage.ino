@@ -88,7 +88,7 @@ void setup() {
   // APRS_setSymbol('n');
   
   // We can print out all the settings
-  APRS_printSettings();
+  APRS_printSettings(Serial);
   Serial.print(F("Free RAM:     ")); Serial.println(freeMemory());
 }
 
