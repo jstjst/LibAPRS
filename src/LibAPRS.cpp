@@ -175,23 +175,23 @@ void APRS_setDirectivity(int s) {
     }
 }
 
-void APRS_printSettings() {
-    Serial.println(F("LibAPRS Settings:"));
-    Serial.print(F("Callsign:     ")); Serial.print(CALL); Serial.print(F("-")); Serial.println(CALL_SSID);
-    Serial.print(F("Destination:  ")); Serial.print(DST); Serial.print(F("-")); Serial.println(DST_SSID);
-    Serial.print(F("Path1:        ")); Serial.print(PATH1); Serial.print(F("-")); Serial.println(PATH1_SSID);
-    Serial.print(F("Path2:        ")); Serial.print(PATH2); Serial.print(F("-")); Serial.println(PATH2_SSID);
-    Serial.print(F("Message dst:  ")); if (message_recip[0] == 0) { Serial.println(F("N/A")); } else { Serial.print(message_recip); Serial.print(F("-")); Serial.println(message_recip_ssid); }
-    Serial.print(F("TX Preamble:  ")); Serial.println(custom_preamble);
-    Serial.print(F("TX Tail:      ")); Serial.println(custom_tail);
-    Serial.print(F("Symbol table: ")); if (symbolTable == '/') { Serial.println(F("Normal")); } else { Serial.println(F("Alternate")); }
-    Serial.print(F("Symbol:       ")); Serial.println(symbol);
-    Serial.print(F("Power:        ")); if (power < 10) { Serial.println(power); } else { Serial.println(F("N/A")); }
-    Serial.print(F("Height:       ")); if (height < 10) { Serial.println(height); } else { Serial.println(F("N/A")); }
-    Serial.print(F("Gain:         ")); if (gain < 10) { Serial.println(gain); } else { Serial.println(F("N/A")); }
-    Serial.print(F("Directivity:  ")); if (directivity < 10) { Serial.println(directivity); } else { Serial.println(F("N/A")); }
-    Serial.print(F("Latitude:     ")); if (latitude[0] != 0) { Serial.println(latitude); } else { Serial.println(F("N/A")); }
-    Serial.print(F("Longtitude:   ")); if (longtitude[0] != 0) { Serial.println(longtitude); } else { Serial.println(F("N/A")); }
+void APRS_printSettings(Stream &serial) {
+    serial.println(F("LibAPRS Settings:"));
+    serial.print(F("Callsign:     ")); serial.print(CALL); serial.print(F("-")); serial.println(CALL_SSID);
+    serial.print(F("Destination:  ")); serial.print(DST); serial.print(F("-")); serial.println(DST_SSID);
+    serial.print(F("Path1:        ")); serial.print(PATH1); serial.print(F("-")); serial.println(PATH1_SSID);
+    serial.print(F("Path2:        ")); serial.print(PATH2); serial.print(F("-")); serial.println(PATH2_SSID);
+    serial.print(F("Message dst:  ")); if (message_recip[0] == 0) { serial.println(F("N/A")); } else { serial.print(message_recip); serial.print(F("-")); serial.println(message_recip_ssid); }
+    serial.print(F("TX Preamble:  ")); serial.println(custom_preamble);
+    serial.print(F("TX Tail:      ")); serial.println(custom_tail);
+    serial.print(F("Symbol table: ")); if (symbolTable == '/') { serial.println(F("Normal")); } else { serial.println(F("Alternate")); }
+    serial.print(F("Symbol:       ")); serial.println(symbol);
+    serial.print(F("Power:        ")); if (power < 10) { serial.println(power); } else { serial.println(F("N/A")); }
+    serial.print(F("Height:       ")); if (height < 10) { serial.println(height); } else { serial.println(F("N/A")); }
+    serial.print(F("Gain:         ")); if (gain < 10) { serial.println(gain); } else { serial.println(F("N/A")); }
+    serial.print(F("Directivity:  ")); if (directivity < 10) { serial.println(directivity); } else { serial.println(F("N/A")); }
+    serial.print(F("Latitude:     ")); if (latitude[0] != 0) { serial.println(latitude); } else { serial.println(F("N/A")); }
+    serial.print(F("Longtitude:   ")); if (longtitude[0] != 0) { serial.println(longtitude); } else { serial.println(F("N/A")); }
 }
 
 void APRS_sendPkt(void *_buffer, size_t length) {
