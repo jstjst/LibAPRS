@@ -60,7 +60,7 @@ void aprs_msg_callback(struct AX25Msg *msg) {
 
 void setup() {
   // Set up serial port
-  Serial.begin(115200);
+  Serial1.begin(115200);
   
   // Initialise APRS library - This starts the modem
   APRS_init(ADC_REFERENCE, OPEN_SQUELCH);
@@ -88,8 +88,8 @@ void setup() {
   // APRS_setSymbol('n');
   
   // We can print out all the settings
-  APRS_printSettings(Serial);
-  Serial.print(F("Free RAM:     ")); Serial.println(freeMemory());
+  APRS_printSettings(Serial1);
+  Serial1.print(F("Free RAM:     ")); Serial1.println(freeMemory());
 }
 
 void locationUpdateExample() {
@@ -136,20 +136,20 @@ void processPacket() {
   if (gotPacket) {
     gotPacket = false;
     
-    Serial.print(F("Received APRS packet. SRC: "));
-    Serial.print(incomingPacket.src.call);
-    Serial.print(F("-"));
-    Serial.print(incomingPacket.src.ssid);
-    Serial.print(F(". DST: "));
-    Serial.print(incomingPacket.dst.call);
-    Serial.print(F("-"));
-    Serial.print(incomingPacket.dst.ssid);
-    Serial.print(F(". Data: "));
+    Serial1.print(F("Received APRS packet. SRC: "));
+    Serial1.print(incomingPacket.src.call);
+    Serial1.print(F("-"));
+    Serial1.print(incomingPacket.src.ssid);
+    Serial1.print(F(". DST: "));
+    Serial1.print(incomingPacket.dst.call);
+    Serial1.print(F("-"));
+    Serial1.print(incomingPacket.dst.ssid);
+    Serial1.print(F(". Data: "));
 
     for (int i = 0; i < incomingPacket.len; i++) {
-      Serial.write(incomingPacket.info[i]);
+      Serial1.write(incomingPacket.info[i]);
     }
-    Serial.println("");
+    Serial1.println("");
 
     // Remeber to free memory for our buffer!
     free(packetData);
@@ -157,7 +157,7 @@ void processPacket() {
     // You can print out the amount of free
     // RAM to check you don't have any memory
     // leaks
-    // Serial.print(F("Free RAM: ")); Serial.println(freeMemory());
+    // Serial1.print(F("Free RAM: ")); Serial1.println(freeMemory());
   }
 }
 

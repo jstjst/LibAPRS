@@ -5,11 +5,11 @@
 
 // CPU settings
 #ifndef TARGET_CPU
-    #define TARGET_CPU m2560
+    #define TARGET_CPU m1284p
 #endif
 
 #ifndef F_CPU
-    #define F_CPU 16000000
+    #define F_CPU 11059200
 #endif
 
 #ifndef FREQUENCY_CORRECTION
@@ -39,6 +39,27 @@
     #define PTT_DDR DDRD
     #define PPT_PIN 3
 #endif
+
+#if TARGET_CPU == m1284p
+    #define DAC_PORT PORTA
+    #define DAC_DDR  DDRA
+    #define DAC_PINA _BV(0)
+    #define DAC_PINB _BV(1)
+    #define DAC_PINC _BV(2)
+    #define DAC_PIND _BV(3)
+    #define DAC_PINS (_BV(1)| _BV(2) | _BV(3) | _BV(4))
+    #define LED_PORT PORTB
+    #define LED_DDR  DDRB
+    #define LED_RX_PIN 1
+    #define LED_TX_PIN 2
+    #define ADC_PORT PORTA
+    #define ADC_DDR  DDRA
+    #define ADC_PIN 4
+    #define PTT_PORT PORTB
+    #define PTT_DDR DDRB
+    #define PPT_PIN 3
+#endif
+
 #if TARGET_CPU == m2560
     #define DAC_PORT PORTA
     #define DAC_DDR  DDRA
@@ -58,6 +79,5 @@
     #define PTT_DDR  DDRA
     #define PPT_PIN 3
 #endif
-
 
 #endif
