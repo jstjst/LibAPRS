@@ -219,13 +219,23 @@ void APRS_sendPkt(void *_buffer, size_t length) {
 }
 
 // Dynamic RAM usage of this function is 30 bytes
-void APRS_sendLoc(void *_buffer, size_t length) {
-    size_t payloadLength = 20+length;
+size_t APRS_sendLoc(void *_buffer, size_t commentLength) {
+    size_t payloadLength = 20;
     bool usePHG = false;
     if (power < 10 && height < 10 && gain < 10 && directivity < 9) {
         usePHG = true;
         payloadLength += 7;
     }
+
+    size_t overLength = 0;
+    if (payloadLength+commentLength > 63)
+    {
+      //comment is to long
+      overLength = payloadLength+commentLength-63
+      commentLength -= overLength;
+    }
+    payloadLength += commentLength;
+
     uint8_t *packet = (uint8_t*)malloc(payloadLength);
     uint8_t *ptr = packet;
     packet[0] = '=';
@@ -246,19 +256,26 @@ void APRS_sendLoc(void *_buffer, size_t length) {
         packet[26] = directivity+48;
         ptr+=7;
     }
-    if (length > 0) {
+    if (commentLength > 0) {
         uint8_t *buffer = (uint8_t *)_buffer;
-        memcpy(ptr, buffer, length);
+        memcpy(ptr, buffer, commentLength);
     }
 
     APRS_sendPkt(packet, payloadLength);
     free(packet);
+    return overLength;
 }
 
 // Dynamic RAM usage of this function is 18 bytes
-void APRS_sendMsg(void *_buffer, size_t length) {
-    if (length > 67) length = 67;
-    size_t payloadLength = 11+length+4;
+size_t APRS_sendMsg(void *_buffer, size_t messageLength) {
+    size_t overLength = 0;
+    if (messageLength > 67)
+    {
+      //message is to long
+      overLength = messageLength-63
+      messageLength -= overLength;
+    }
+    size_t payloadLength = 11+messageLength+4;
 
     uint8_t *packet = (uint8_t*)malloc(payloadLength);
     uint8_t *ptr = packet;
@@ -285,27 +302,28 @@ void APRS_sendMsg(void *_buffer, size_t length) {
     }
     packet[1+count] = ':';
     ptr += 11;
-    if (length > 0) {
+    if (messageLength > 0) {
         uint8_t *buffer = (uint8_t *)_buffer;
-        memcpy(ptr, buffer, length);
-        memcpy(lastMessage, buffer, length);
-        lastMessageLen = length;
+        memcpy(ptr, buffer, messageLength);
+        memcpy(lastMessage, buffer, messageLength);
+        lastMessageLen = messageLength;
     }
 
     message_seq++;
     if (message_seq > 999) message_seq = 0;
 
-    packet[11+length] = '{';
+    packet[11+messageLength] = '{';
     int n = message_seq % 10;
     int d = ((message_seq % 100) - n)/10;
     int h = (message_seq - d - n) / 100;
 
-    packet[12+length] = h+48;
-    packet[13+length] = d+48;
-    packet[14+length] = n+48;
-    
+    packet[12+messageLength] = h+48;
+    packet[13+messageLength] = d+48;
+    packet[14+messageLength] = n+48;
+
     APRS_sendPkt(packet, payloadLength);
     free(packet);
+    return messageLength;
 }
 
 void APRS_msgRetry() {
