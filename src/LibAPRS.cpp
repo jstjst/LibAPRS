@@ -247,7 +247,7 @@ size_t APRS_sendLoc(void *_buffer, size_t commentLength) {
     if (payloadLength+commentLength > 63)
     {
       //comment is to long
-      overLength = payloadLength+commentLength-63
+      overLength = payloadLength+commentLength-63;
       commentLength -= overLength;
     }
     payloadLength += commentLength;
@@ -296,7 +296,7 @@ size_t APRS_sendMsg(void *_buffer, size_t messageLength) {
     if (messageLength > 67)
     {
       //message is to long
-      overLength = messageLength-63
+      overLength = messageLength-63;
       messageLength -= overLength;
     }
     size_t payloadLength = 11+messageLength+4;
