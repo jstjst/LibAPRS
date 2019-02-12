@@ -29,9 +29,12 @@ int PATH2_SSID = 2;
 
 AX25Call path[4];
 
+bool useAlt = false;
+
 // Location packet assembly fields
 char latitude[9];
 char longtitude[10];
+char altitude[6];
 char symbolTable = '/';
 char symbol = 'n';
 
@@ -151,6 +154,17 @@ void APRS_setLon(char *lon) {
     }
 }
 
+void APRS_setAlt(unsigned long alt)
+{
+  useAlt = true;
+  altitude[6] = 0;
+  for(int i=5; i>=0; i--)
+  {
+    altitude[i] = (alt % 10) + 48;
+    alt /= 10;
+  }
+}
+
 void APRS_setPower(int s) {
     if (s >= 0 && s < 10) {
         power = s;
@@ -227,6 +241,8 @@ size_t APRS_sendLoc(void *_buffer, size_t commentLength) {
         payloadLength += 7;
     }
 
+    if (useAlt) payloadLength += 9;
+
     size_t overLength = 0;
     if (payloadLength+commentLength > 63)
     {
@@ -255,6 +271,14 @@ size_t APRS_sendLoc(void *_buffer, size_t commentLength) {
         packet[25] = gain+48;
         packet[26] = directivity+48;
         ptr+=7;
+    }
+    if (useAlt) {
+        packet[27] = '/';
+        packet[28] = 'A';
+        packet[29] = '=';
+        ptr+=3;
+        memcpy(ptr, altitude, 5);
+        ptr+=5;
     }
     if (commentLength > 0) {
         uint8_t *buffer = (uint8_t *)_buffer;
