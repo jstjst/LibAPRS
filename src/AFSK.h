@@ -39,7 +39,7 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CPU_FREQ F_CPU
 
 #define CONFIG_AFSK_RX_BUFLEN 64
-#define CONFIG_AFSK_TX_BUFLEN 64   
+#define CONFIG_AFSK_TX_BUFLEN 64
 #define CONFIG_AFSK_RXTIMEOUT 0
 #define CONFIG_AFSK_PREAMBLE_LEN 150UL
 #define CONFIG_AFSK_TRAILER_LEN 50UL
@@ -72,9 +72,10 @@ typedef struct Afsk
     Hdlc hdlc;                              // We need a link control structure
     uint16_t preambleLength;                // Length of sync preamble
     uint16_t tailLength;                    // Length of transmission tail
+    uint16_t testLength;                    // Test tone Length in ms (be careful, above values are not in ms)
 
     // Modulation values
-    uint8_t sampleIndex;                    // Current sample index for outgoing bit 
+    uint8_t sampleIndex;                    // Current sample index for outgoing bit
     uint8_t currentOutputByte;              // Current byte to be modulated
     uint8_t txBit;                          // Mask of current modulated bit
     bool bitStuff;                          // Whether bitstuffing is allowed
@@ -108,12 +109,15 @@ typedef struct Afsk
 } Afsk;
 
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
-#define MARK_INC   (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)MARK_FREQ, CONFIG_AFSK_DAC_SAMPLERATE))
-#define SPACE_INC  (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)SPACE_FREQ, CONFIG_AFSK_DAC_SAMPLERATE))
+#define MARK_INC   (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)MARK_FREQ, CONFIG_AFSK_DAC_SAMPLERATE))     //32
+#define SPACE_INC  (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)SPACE_FREQ, CONFIG_AFSK_DAC_SAMPLERATE))    //59
 
 #define AFSK_DAC_IRQ_START()   do { extern bool hw_afsk_dac_isr; hw_afsk_dac_isr = true; } while (0)
 #define AFSK_DAC_IRQ_STOP()    do { extern bool hw_afsk_dac_isr; hw_afsk_dac_isr = false; } while (0)
+#define AFSK_TEST_TONE_START() do { extern bool afsk_test_tone; afsk_test_tone = true; } while (0)
+#define AFSK_TEST_TONE_STOP() do { extern bool afsk_test_tone; afsk_test_tone = false; } while (0)
 #define AFSK_DAC_INIT()        do { DAC_DDR |= 0xF8; } while (0)
+
 
 // Here's some macros for controlling the RX/TX LEDs
 // THE _INIT() functions writes to the DDRB register
@@ -134,5 +138,6 @@ void AFSK_poll(Afsk *afsk);
 
 void afsk_putchar(char c);
 int afsk_getchar(void);
+int afsk_testTone(unsigned int frequency, unsigned long duration);
 
 #endif

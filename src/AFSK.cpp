@@ -8,6 +8,7 @@ extern int LibAPRS_vref;
 extern bool LibAPRS_open_squelch;
 
 bool hw_afsk_dac_isr = false;
+bool afsk_test_tone = false;
 bool hw_5v_ref = false;
 Afsk *AFSK_modem;
 
@@ -15,6 +16,7 @@ Afsk *AFSK_modem;
 // Forward declerations
 int afsk_getchar(void);
 void afsk_putchar(char c);
+int afsk_testTone(unsigned int frequency, unsigned long duration);
 
 void AFSK_hw_refDetect(void) {
     // This is manual for now
@@ -30,7 +32,7 @@ void AFSK_hw_init(void) {
 
     AFSK_hw_refDetect();
 
-    TCCR1A = 0;                                    
+    TCCR1A = 0;
     TCCR1B = _BV(CS10) | _BV(WGM13) | _BV(WGM12);
     ICR1 = (((CPU_FREQ+FREQUENCY_CORRECTION)) / 9600) - 1;
 
@@ -45,7 +47,7 @@ void AFSK_hw_init(void) {
     DIDR0 |= _BV(0);
     ADCSRB =    _BV(ADTS2) |
                 _BV(ADTS1) |
-                _BV(ADTS0);  
+                _BV(ADTS0);
     ADCSRA =    _BV(ADEN) |
                 _BV(ADSC) |
                 _BV(ADATE)|
@@ -92,6 +94,35 @@ static void AFSK_txStart(Afsk *afsk) {
     }
 }
 
+int afsk_testTone(unsigned int frequency, unsigned long duration)
+{
+  if(!AFSK_modem->sending)
+  {
+    if(frequency == MARK_FREQ)
+    {
+      AFSK_modem->phaseInc = MARK_INC;
+    }
+    else if (frequency == SPACE_FREQ)
+    {
+      AFSK_modem->phaseInc = SPACE_INC;
+    }
+    else
+    {
+      return -1;
+    }
+
+    AFSK_modem->phaseAcc = 0;
+    AFSK_modem->sending = true;
+    LED_TX_ON();
+    AFSK_modem->testLength = DIV_ROUND(duration * BITRATE, 125);
+    AFSK_TEST_TONE_START();
+    AFSK_DAC_IRQ_START();
+    return 0;
+    
+  }
+  return 1;
+}
+
 void afsk_putchar(char c) {
     AFSK_txStart(AFSK_modem);
     while(fifo_isfull_locked(&AFSK_modem->txFifo)) { /* Wait */ }
@@ -114,51 +145,92 @@ void AFSK_transmit(char *buffer, size_t size) {
     }
 }
 
+uint8_t AFSK_dac_isr_test(Afsk *afsk)
+{
+  if (afsk->testLength == 0)
+  {
+    AFSK_DAC_IRQ_STOP();
+    AFSK_TEST_TONE_STOP();
+    afsk->sending = false;
+    LED_TX_OFF();
+    return 0;
+  }
+
+  afsk->phaseAcc += afsk->phaseInc;
+  afsk->phaseAcc %= SIN_LEN;
+  afsk->testLength--;
+
+  return sinSample(afsk->phaseAcc);
+}
+
 uint8_t AFSK_dac_isr(Afsk *afsk) {
-    if (afsk->sampleIndex == 0) {
-        if (afsk->txBit == 0) {
-            if (fifo_isempty(&afsk->txFifo) && afsk->tailLength == 0) {
+    if (afsk->sampleIndex == 0)
+    {
+        if (afsk->txBit == 0)
+        {
+            if (fifo_isempty(&afsk->txFifo) && afsk->tailLength == 0)
+            {
                 AFSK_DAC_IRQ_STOP();
                 afsk->sending = false;
                 LED_TX_OFF();
                 return 0;
-            } else {
+            }
+            else
+            {
                 if (!afsk->bitStuff) afsk->bitstuffCount = 0;
                 afsk->bitStuff = true;
-                if (afsk->preambleLength == 0) {
-                    if (fifo_isempty(&afsk->txFifo)) {
+                if (afsk->preambleLength == 0)
+                {
+                    if (fifo_isempty(&afsk->txFifo))
+                    {
                         afsk->tailLength--;
                         afsk->currentOutputByte = HDLC_FLAG;
-                    } else {
+                    }
+                    else
+                    {
                         afsk->currentOutputByte = fifo_pop(&afsk->txFifo);
                     }
-                } else {
+                }
+                else
+                {
                     afsk->preambleLength--;
                     afsk->currentOutputByte = HDLC_FLAG;
                 }
-                if (afsk->currentOutputByte == AX25_ESC) {
-                    if (fifo_isempty(&afsk->txFifo)) {
+                if (afsk->currentOutputByte == AX25_ESC)
+                {
+                    if (fifo_isempty(&afsk->txFifo))
+                    {
                         AFSK_DAC_IRQ_STOP();
                         afsk->sending = false;
                         LED_TX_OFF();
                         return 0;
-                    } else {
+                    }
+                    else
+                    {
                         afsk->currentOutputByte = fifo_pop(&afsk->txFifo);
                     }
-                } else if (afsk->currentOutputByte == HDLC_FLAG || afsk->currentOutputByte == HDLC_RESET) {
+                }
+                else if (afsk->currentOutputByte == HDLC_FLAG || afsk->currentOutputByte == HDLC_RESET)
+                {
                     afsk->bitStuff = false;
                 }
             }
             afsk->txBit = 0x01;
         }
 
-        if (afsk->bitStuff && afsk->bitstuffCount >= BIT_STUFF_LEN) {
+        if (afsk->bitStuff && afsk->bitstuffCount >= BIT_STUFF_LEN)
+        {
             afsk->bitstuffCount = 0;
             afsk->phaseInc = SWITCH_TONE(afsk->phaseInc);
-        } else {
-            if (afsk->currentOutputByte & afsk->txBit) {
+        }
+        else
+        {
+            if (afsk->currentOutputByte & afsk->txBit)
+            {
                 afsk->bitstuffCount++;
-            } else {
+            }
+            else
+            {
                 afsk->bitstuffCount = 0;
                 afsk->phaseInc = SWITCH_TONE(afsk->phaseInc);
             }
@@ -184,7 +256,7 @@ static bool hdlcParse(Hdlc *hdlc, bool bit, FIFOBuffer *fifo) {
     // the left by one bit, to make room for the
     // next incoming bit
     hdlc->demodulatedBits <<= 1;
-    // And then put the newest bit from the 
+    // And then put the newest bit from the
     // demodulator into the byte.
     hdlc->demodulatedBits |= bit ? 1 : 0;
 
@@ -205,9 +277,9 @@ static bool hdlcParse(Hdlc *hdlc, bool bit, FIFOBuffer *fifo) {
             }
         } else {
             // If the buffer is full, we have a problem
-            // and abort by setting the return value to     
+            // and abort by setting the return value to
             // false and stopping the here.
-            
+
             ret = false;
             hdlc->receiving = false;
             LED_RX_OFF();
@@ -255,7 +327,7 @@ static bool hdlcParse(Hdlc *hdlc, bool bit, FIFOBuffer *fifo) {
     // a control character. Therefore, if we detect such a
     // "stuffed bit", we simply ignore it and wait for the
     // next bit to come in.
-    // 
+    //
     // We do the detection by applying an AND bit-mask to the
     // stream of demodulated bits. This mask is 00111111 (0x3f)
     // if the result of the operation is 00111110 (0x3e), we
@@ -333,7 +405,7 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
     afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) >> 2;
 
     afsk->iirY[0] = afsk->iirY[1];
-    
+
     afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] >> 1); // Chebyshev filter
 
 
@@ -347,7 +419,7 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
     fifo_push(&afsk->delayFifo, currentSample);
 
     // We need to check whether there is a signal transition.
-    // If there is, we can recalibrate the phase of our 
+    // If there is, we can recalibrate the phase of our
     // sampler to stay in sync with the transmitter. A bit of
     // explanation is required to understand how this works.
     // Since we have PHASE_MAX/PHASE_BITS = 8 samples per bit,
@@ -363,13 +435,13 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
     //   Past                                      Future
     //       0000000011111111000000001111111100000000
     //                   |________|
-    //                       ||     
+    //                       ||
     //                     Window
     //
     // Every time we detect a signal transition, we adjust
     // where this window is positioned little. How much we
     // adjust it is defined by PHASE_INC. If our current phase
-    // phase counter value is less than half of PHASE_MAX (ie, 
+    // phase counter value is less than half of PHASE_MAX (ie,
     // the window size) when a signal transition is detected,
     // add PHASE_INC to our phase counter, effectively moving
     // the window a little bit backward (to the left in the
@@ -458,13 +530,25 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
 extern void APRS_poll();
 uint8_t poll_timer = 0;
+
 ISR(ADC_vect) {
     TIFR1 = _BV(ICF1);
     AFSK_adc_isr(AFSK_modem, ((int16_t)((ADC) >> 2) - 128));
-    if (hw_afsk_dac_isr) {
-        DAC_PORT = (AFSK_dac_isr(AFSK_modem) & 0xF0) | _BV(3); 
-    } else {
-        DAC_PORT = 128;
+    if (hw_afsk_dac_isr)
+    {
+      if(afsk_test_tone)
+      {
+        DAC_PORT = (AFSK_dac_isr_test(AFSK_modem) & 0xF0);
+        DAC_PORT ^= ( 1 << 3 );
+      }
+      else
+      {
+        DAC_PORT = (AFSK_dac_isr(AFSK_modem) & 0xF0) | _BV(3);
+      }
+    }
+    else
+    {
+      DAC_PORT = 128;
     }
 
     poll_timer++;
