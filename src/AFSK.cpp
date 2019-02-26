@@ -114,7 +114,7 @@ int afsk_testTone(unsigned int frequency, unsigned long duration)
     AFSK_modem->phaseAcc = 0;
     AFSK_modem->sending = true;
     LED_TX_ON();
-    AFSK_modem->testLength = DIV_ROUND(duration * BITRATE, 125);
+    AFSK_modem->testLength = DIV_ROUND(duration * SAMPLERATE, 1000);
     AFSK_TEST_TONE_START();
     AFSK_DAC_IRQ_START();
     return 0;
