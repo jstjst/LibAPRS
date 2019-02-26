@@ -34,7 +34,7 @@ void AFSK_hw_init(void) {
 
     TCCR1A = 0;
     TCCR1B = _BV(CS10) | _BV(WGM13) | _BV(WGM12);
-    ICR1 = (((CPU_FREQ+FREQUENCY_CORRECTION)) / 9600) - 1;
+    ICR1 = (((CPU_FREQ+FREQUENCY_CORRECTION)) / SAMPLERATE) - 1;
 
     if (hw_5v_ref) {
         ADMUX = _BV(REFS0) | 0;
@@ -118,7 +118,7 @@ int afsk_testTone(unsigned int frequency, unsigned long duration)
     AFSK_TEST_TONE_START();
     AFSK_DAC_IRQ_START();
     return 0;
-    
+
   }
   return 1;
 }
