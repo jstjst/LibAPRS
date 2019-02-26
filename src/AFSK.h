@@ -43,7 +43,7 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CONFIG_AFSK_RXTIMEOUT 0
 #define CONFIG_AFSK_PREAMBLE_LEN 150UL
 #define CONFIG_AFSK_TRAILER_LEN 50UL
-#define SAMPLERATE 9600
+#define SAMPLERATE CONFIG_AFSK_DAC_SAMPLERATE
 #define BITRATE    1200
 #define SAMPLESPERBIT (SAMPLERATE / BITRATE)
 #define BIT_STUFF_LEN 5
@@ -109,8 +109,8 @@ typedef struct Afsk
 } Afsk;
 
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
-#define MARK_INC   (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)MARK_FREQ, CONFIG_AFSK_DAC_SAMPLERATE))     //32
-#define SPACE_INC  (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)SPACE_FREQ, CONFIG_AFSK_DAC_SAMPLERATE))    //59
+#define MARK_INC   (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)MARK_FREQ, SAMPLERATE))     //32
+#define SPACE_INC  (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)SPACE_FREQ, SAMPLERATE))    //59
 
 #define AFSK_DAC_IRQ_START()   do { extern bool hw_afsk_dac_isr; hw_afsk_dac_isr = true; } while (0)
 #define AFSK_DAC_IRQ_STOP()    do { extern bool hw_afsk_dac_isr; hw_afsk_dac_isr = false; } while (0)
