@@ -19,8 +19,8 @@
 // get called by the library every time a packet is
 // received, so you can process incoming packets.
 //
-// If you are only interested in transmitting, you
-// should just leave this function empty.
+// If you are only interested in receiving, you should
+// just leave this function empty.
 // 
 // IMPORTANT! This function is called from within an
 // interrupt. That means that you should only do things
@@ -60,7 +60,7 @@ void aprs_msg_callback(struct AX25Msg *msg) {
 
 void setup() {
   // Set up serial port
-  Serial1.begin(115200);
+  Serial.begin(115200);
   
   // Initialise APRS library - This starts the modem
   APRS_init(ADC_REFERENCE, OPEN_SQUELCH);
@@ -88,8 +88,8 @@ void setup() {
   // APRS_setSymbol('n');
   
   // We can print out all the settings
-  APRS_printSettings(Serial1);
-  Serial1.print(F("Free RAM:     ")); Serial1.println(freeMemory());
+  APRS_printSettings();
+  Serial.print(F("Free RAM:     ")); Serial.println(freeMemory());
 }
 
 void locationUpdateExample() {
@@ -136,20 +136,20 @@ void processPacket() {
   if (gotPacket) {
     gotPacket = false;
     
-    Serial1.print(F("Received APRS packet. SRC: "));
-    Serial1.print(incomingPacket.src.call);
-    Serial1.print(F("-"));
-    Serial1.print(incomingPacket.src.ssid);
-    Serial1.print(F(". DST: "));
-    Serial1.print(incomingPacket.dst.call);
-    Serial1.print(F("-"));
-    Serial1.print(incomingPacket.dst.ssid);
-    Serial1.print(F(". Data: "));
+    Serial.print(F("Received APRS packet. SRC: "));
+    Serial.print(incomingPacket.src.call);
+    Serial.print(F("-"));
+    Serial.print(incomingPacket.src.ssid);
+    Serial.print(F(". DST: "));
+    Serial.print(incomingPacket.dst.call);
+    Serial.print(F("-"));
+    Serial.print(incomingPacket.dst.ssid);
+    Serial.print(F(". Data: "));
 
     for (int i = 0; i < incomingPacket.len; i++) {
-      Serial1.write(incomingPacket.info[i]);
+      Serial.write(incomingPacket.info[i]);
     }
-    Serial1.println("");
+    Serial.println("");
 
     // Remeber to free memory for our buffer!
     free(packetData);
@@ -157,7 +157,7 @@ void processPacket() {
     // You can print out the amount of free
     // RAM to check you don't have any memory
     // leaks
-    // Serial1.print(F("Free RAM: ")); Serial1.println(freeMemory());
+    // Serial.print(F("Free RAM: ")); Serial.println(freeMemory());
   }
 }
 

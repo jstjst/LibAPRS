@@ -40,7 +40,6 @@ static void ax25_decode(AX25Ctx *ctx) {
         msg.rpt_list[msg.rpt_count].call[6] = 0; 
         msg.rpt_list[msg.rpt_count].ssid = (*buf >> 1) & 0x0F;
         AX25_SET_REPEATED(&msg, msg.rpt_count, (*buf & 0x80));
-        msg.rpt_list[msg.rpt_count].call[6] = 0;
     }
 
     msg.ctrl = *buf++;
@@ -130,15 +129,27 @@ static void ax25_sendCall(AX25Ctx *ctx, const AX25Call *addr, bool last){
         c = toupper(c);
         ax25_putchar(ctx, c << 1);
     }
-
+		
+	
     if (len < (sizeof(addr->call) - CALL_OVERSPACE)) {
         for (unsigned i = 0; i < (sizeof(addr->call) - CALL_OVERSPACE) - len; i++) {
             ax25_putchar(ctx, ' ' << 1);
         }
     }
+      
 
-    uint8_t ssid = 0x60 | (addr->ssid << 1) | (last ? 0x01 : 0);
-    ax25_putchar(ctx, ssid);
+    //uint8_t ssid = 0x60 | (addr->ssid << 1) | (last ? 0x01 : 0);    
+	//ax25_putchar(ctx, ssid);
+	
+	
+	if(strcmp(addr->call,"ARISS")==0){
+		ax25_putchar(ctx, ' ' << 1);
+	}else{
+		uint8_t ssid = 0x60 | (addr->ssid << 1) | (last ? 0x01 : 0);
+		ax25_putchar(ctx, ssid);
+	}
+
+    
 }
 
 void ax25_sendVia(AX25Ctx *ctx, const AX25Call *path, size_t path_len, const void *_buf, size_t len) {

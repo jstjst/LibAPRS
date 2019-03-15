@@ -26,8 +26,12 @@ char PATH1[7] = "WIDE1";
 int PATH1_SSID = 1;
 char PATH2[7] = "WIDE2";
 int PATH2_SSID = 2;
+int PATH_SIZE = 0;
+
+
 
 AX25Call path[4];
+
 
 // Location packet assembly fields
 char latitude[9];
@@ -103,6 +107,10 @@ void APRS_setPath2(char *call, int ssid) {
     PATH2_SSID = ssid;
 }
 
+void APRS_setPathSize(int pathSize) {
+    PATH_SIZE = pathSize;
+}
+
 void APRS_setMessageDestination(char *call, int ssid) {
     memset(message_recip, 0, 7);
     int i = 0;
@@ -175,23 +183,23 @@ void APRS_setDirectivity(int s) {
     }
 }
 
-void APRS_printSettings(Stream &serial) {
-    serial.println(F("LibAPRS Settings:"));
-    serial.print(F("Callsign:     ")); serial.print(CALL); serial.print(F("-")); serial.println(CALL_SSID);
-    serial.print(F("Destination:  ")); serial.print(DST); serial.print(F("-")); serial.println(DST_SSID);
-    serial.print(F("Path1:        ")); serial.print(PATH1); serial.print(F("-")); serial.println(PATH1_SSID);
-    serial.print(F("Path2:        ")); serial.print(PATH2); serial.print(F("-")); serial.println(PATH2_SSID);
-    serial.print(F("Message dst:  ")); if (message_recip[0] == 0) { serial.println(F("N/A")); } else { serial.print(message_recip); serial.print(F("-")); serial.println(message_recip_ssid); }
-    serial.print(F("TX Preamble:  ")); serial.println(custom_preamble);
-    serial.print(F("TX Tail:      ")); serial.println(custom_tail);
-    serial.print(F("Symbol table: ")); if (symbolTable == '/') { serial.println(F("Normal")); } else { serial.println(F("Alternate")); }
-    serial.print(F("Symbol:       ")); serial.println(symbol);
-    serial.print(F("Power:        ")); if (power < 10) { serial.println(power); } else { serial.println(F("N/A")); }
-    serial.print(F("Height:       ")); if (height < 10) { serial.println(height); } else { serial.println(F("N/A")); }
-    serial.print(F("Gain:         ")); if (gain < 10) { serial.println(gain); } else { serial.println(F("N/A")); }
-    serial.print(F("Directivity:  ")); if (directivity < 10) { serial.println(directivity); } else { serial.println(F("N/A")); }
-    serial.print(F("Latitude:     ")); if (latitude[0] != 0) { serial.println(latitude); } else { serial.println(F("N/A")); }
-    serial.print(F("Longtitude:   ")); if (longtitude[0] != 0) { serial.println(longtitude); } else { serial.println(F("N/A")); }
+void APRS_printSettings() {
+    Serial.println(F("LibAPRS Settings:"));
+    Serial.print(F("Callsign:     ")); Serial.print(CALL); Serial.print(F("-")); Serial.println(CALL_SSID);
+    Serial.print(F("Destination:  ")); Serial.print(DST); Serial.print(F("-")); Serial.println(DST_SSID);
+    Serial.print(F("Path1:        ")); Serial.print(PATH1); Serial.print(F("-")); Serial.println(PATH1_SSID);
+    Serial.print(F("Path2:        ")); Serial.print(PATH2); Serial.print(F("-")); Serial.println(PATH2_SSID);
+    Serial.print(F("Message dst:  ")); if (message_recip[0] == 0) { Serial.println(F("N/A")); } else { Serial.print(message_recip); Serial.print(F("-")); Serial.println(message_recip_ssid); }
+    Serial.print(F("TX Preamble:  ")); Serial.println(custom_preamble);
+    Serial.print(F("TX Tail:      ")); Serial.println(custom_tail);
+    Serial.print(F("Symbol table: ")); if (symbolTable == '/') { Serial.println(F("Normal")); } else { Serial.println(F("Alternate")); }
+    Serial.print(F("Symbol:       ")); Serial.println(symbol);
+    Serial.print(F("Power:        ")); if (power < 10) { Serial.println(power); } else { Serial.println(F("N/A")); }
+    Serial.print(F("Height:       ")); if (height < 10) { Serial.println(height); } else { Serial.println(F("N/A")); }
+    Serial.print(F("Gain:         ")); if (gain < 10) { Serial.println(gain); } else { Serial.println(F("N/A")); }
+    Serial.print(F("Directivity:  ")); if (directivity < 10) { Serial.println(directivity); } else { Serial.println(F("N/A")); }
+    Serial.print(F("Latitude:     ")); if (latitude[0] != 0) { Serial.println(latitude); } else { Serial.println(F("N/A")); }
+    Serial.print(F("Longtitude:   ")); if (longtitude[0] != 0) { Serial.println(longtitude); } else { Serial.println(F("N/A")); }
 }
 
 void APRS_sendPkt(void *_buffer, size_t length) {
@@ -200,6 +208,7 @@ void APRS_sendPkt(void *_buffer, size_t length) {
 
     memcpy(dst.call, DST, 6);
     dst.ssid = DST_SSID;
+
 
     memcpy(src.call, CALL, 6);
     src.ssid = CALL_SSID;
@@ -212,10 +221,26 @@ void APRS_sendPkt(void *_buffer, size_t length) {
 
     path[0] = dst;
     path[1] = src;
-    path[2] = path1;
-    path[3] = path2;
+    
+    
+	//modified for LibAPRS
+	//path[2] = path1;
+    //path[3] = path2;   
 
-    ax25_sendVia(&AX25, path, countof(path), buffer, length);
+    size_t path_len = countof(path);
+    
+    if(PATH_SIZE == 2){
+        path[2] = path1;
+    	path[3] = path2;
+    } else if (PATH_SIZE == 1){
+        path[2] = path2;
+        path_len --;
+    } else if (PATH_SIZE == 0){
+        path_len -=2;
+    }
+    
+	ax25_sendVia(&AX25, path, path_len, buffer, length);
+    //ax25_sendVia(&AX25, path, countof(path), buffer, length);
 }
 
 // Dynamic RAM usage of this function is 30 bytes
@@ -246,6 +271,64 @@ void APRS_sendLoc(void *_buffer, size_t length) {
         packet[26] = directivity+48;
         ptr+=7;
     }
+    if (length > 0) {
+        uint8_t *buffer = (uint8_t *)_buffer;
+        memcpy(ptr, buffer, length);
+    }
+
+    APRS_sendPkt(packet, payloadLength);
+    free(packet);
+}
+
+//added for LibAPRS
+void APRS_sendLocWtTmStmp(void *_buffer, size_t length, char *timestamp_buff) {
+
+    size_t payloadLength = 27+length;
+    bool usePHG = false;
+    if (power < 10 && height < 10 && gain < 10 && directivity < 9) {
+        usePHG = true;
+        payloadLength += 7;
+    }
+    uint8_t *packet = (uint8_t*)malloc(payloadLength);
+    uint8_t *ptr = packet;
+    packet[0] = '/';
+    packet[16] = symbolTable;
+    packet[26] = symbol;
+    ptr++;
+    memcpy(ptr, timestamp_buff, 7);
+	ptr += 7;
+    memcpy(ptr, latitude, 8);
+    ptr += 9;
+    memcpy(ptr, longtitude, 9);
+    ptr += 10;
+    if (usePHG) {
+        packet[27] = 'P';
+        packet[28] = 'H';
+        packet[29] = 'G';
+        packet[30] = power+48;
+        packet[31] = height+48;
+        packet[32] = gain+48;
+        packet[33] = directivity+48;
+        ptr+=7;
+    }
+    if (length > 0) {
+        uint8_t *buffer = (uint8_t *)_buffer;
+        memcpy(ptr, buffer, length);
+    }
+
+    APRS_sendPkt(packet, payloadLength);
+    free(packet);
+}
+
+
+void APRS_sendStatus(void *_buffer, size_t length) {
+    size_t payloadLength = 1+length;
+
+    uint8_t *packet = (uint8_t*)malloc(payloadLength);
+    uint8_t *ptr = packet;
+    packet[0] = '>';
+    ptr++;
+
     if (length > 0) {
         uint8_t *buffer = (uint8_t *)_buffer;
         memcpy(ptr, buffer, length);

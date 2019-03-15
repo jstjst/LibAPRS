@@ -16,6 +16,7 @@ void APRS_setDestination(char *call, int ssid);
 void APRS_setMessageDestination(char *call, int ssid);
 void APRS_setPath1(char *call, int ssid);
 void APRS_setPath2(char *call, int ssid);
+void APRS_setPathSize(int pathSize);
 
 void APRS_setPreamble(unsigned long pre);
 void APRS_setTail(unsigned long tail);
@@ -31,9 +32,11 @@ void APRS_setDirectivity(int s);
 
 void APRS_sendPkt(void *_buffer, size_t length);
 void APRS_sendLoc(void *_buffer, size_t length);
+void APRS_sendLocWtTmStmp(void *_buffer, size_t length, char *timestamp_buff);
+void APRS_sendStatus(void *_buffer, size_t length);
 void APRS_sendMsg(void *_buffer, size_t length);
 void APRS_msgRetry();
 
-void APRS_printSettings(Stream &serial);
+void APRS_printSettings();
 
 int freeMemory();
