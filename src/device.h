@@ -26,6 +26,7 @@
     #define LED_PORT PORTB
     #define LED_DDR  DDRB
     #define ADC_PORT PORTC
+    #define ADC_PIN  PINC
     #define ADC_DDR  DDRC
 #endif
 
